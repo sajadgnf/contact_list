@@ -14,51 +14,101 @@ var contactNumber = _id("phone_num")
 var subminBtn = _id("submit_btn")
 var contactList = _id("phone_list")
 var error = _id("error")
+var contacts = []
 
-var contac = $.createElement("li")
-var confirmedName = $.createElement("span")
-var confirmedNumber = $.createElement("span")
-var deletContact = $.createElement("span")
-var deletIcon = $.createElement("i")
+// Bild Contact
+var bildContact = () => {
+    contactList.innerHTML = ""
 
-// Contact Save
-contactFrom.addEventListener("submit", function (event) {
-    if (!contactNumber.value == "" && !contactName.value == "") {
-        confirmedName.innerHTML = contactNumber.value
-        confirmedNumber.innerHTML = contactName.value
-        deletIcon.setAttribute("class", "fas fa-times deletIcon")
-        contac.setAttribute("class", "li_style")
-    
-        contac.appendChild(confirmedNumber)
-        contac.appendChild(confirmedName)
-        deletContact.appendChild(deletIcon)
-        contac.appendChild(deletContact)
-        contactList.appendChild(contac)
+    contacts.forEach((contact) => {
+        // clear Contact
+        var clearIcon = $.createElement('i')
+        clearIcon.setAttribute("class", "fas fa-times deletIcon")
+        clearIcon.addEventListener("click", () => {
+            deletContact(contact.name, contact.number)
+        })
+
+        // Creat Contact
+        var confirmedName = $.createElement("span")
+        var confirmedNumber = $.createElement("span")
+        confirmedName.innerText = contact.name
+        confirmedNumber.innerText = contact.number
+
+        // Contact Box
+        var contactEl = $.createElement("li")
+        contactEl.setAttribute('class', "li_style")
+
+        contactEl.append( confirmedName, confirmedNumber, clearIcon)
+        contactList.appendChild(contactEl)
+    })
+}
+
+// clearing Inputs
+var clear = () => {
+    contactName.value = ""
+    contactNumber.value = ""
+}
+
+// Error
+const Inputerror = (name, number) => {
+    if (name == "" || number == "") {
+        error.innerHTML = "Please Inter A Name"
+        return false
+    }
+    return true
+}
+
+// Clear The Error Notif
+var clearError = () => {
+    error.innerHTML = ""
+}
+
+// deletItem
+var deletContact = (inputName, inputNum) => {
+    var deleteContactConfirm = confirm("Are You Sure...?")
+    if (deleteContactConfirm) {
+        contacts.forEach((item, index) => {
+            if (item.name == inputName && item.number == inputNum) {
+                contacts.splice(index, 1)
+            }
+        })
+    }
+    localStorage.setItem("contacts", JSON.stringify(contacts))
+    fetchContacts()
+}
+
+// Submit The Form
+contactFrom.addEventListener("submit", (event) => {
+    event.preventDefault()
+
+    if (!Inputerror(contactName.value, contactNumber.value)) {
+        return false
     }
 
-    // Save In Browser
-    localStorage.setItem("contactList", contactList.innerHTML)
-    event.preventDefault()
+    contacts.push({ name: contactName.value, number: contactNumber.value })
+    localStorage.setItem("contacts", JSON.stringify(contacts))
+
+    bildContact()
+    clear()
 })
 
-// deleteContact
-deletContact.addEventListener("click", function () {
-    contactList.removeChild(contac)
-})
-
-// refresh Action
-if (window.performance) {
-    contactList.innerHTML = localStorage.getItem("contactList")
+// Fetch Contacts
+const fetchContacts = () => {
+    if (localStorage.getItem("contacts")) {
+        contacts = JSON.parse(localStorage.getItem("contacts"))
+    } else {
+        contacts = []
+        localStorage.setItem("contacts", JSON.stringify(contacts))
+    }
+    bildContact()
 }
 
 // delet All
-function deletFunc() {
+var deletFunc = () => {
     localStorage.clear()
 
-    contactNumber.value = ""
-    contactName.value = ""
     contactList.innerHTML = ""
+    clear()
 }
 
-
-
+fetchContacts()
